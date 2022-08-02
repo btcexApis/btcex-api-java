@@ -1,0 +1,73 @@
+# 忽略匹配下列规则的Git 提交 V2.1.0
+### gradle ###
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### STS ###
+.settings/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+*.lock
+rebel.xml
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+### maven ###
+target/
+*.war
+*.ear
+*.zip
+*.tar
+*.tar.gz
+
+### logs ####
+/logs/
+*.log
+
+### temp ignore ###
+*.cache
+*.diff
+*.patch
+*.tmp
+*.java~
+*.properties~
+*.xml~
+
+### system ignore ###
+.DS_Store
+Thumbs.db
+Servers
+.metadata
+upload
+gen_code
+
+### node ###
+node_modules
+
+/docs/api-docs/source/fonts/
+/docs/api-docs/source/images/
+/docs/api-docs/source/includes/
+/docs/api-docs/source/javascripts/
+/docs/api-docs/source/layouts/
+/docs/api-docs/source/stylesheets/
+/docs/api-docs/source/index.html.md
+/docs/api-docs/build.xml
+/docs/api-docs/docker-compose.yml
+/docs/api-docs/run.sh
