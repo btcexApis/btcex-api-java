@@ -24,14 +24,14 @@ public class AuthTest {
     private final static Logger log = LoggerFactory.getLogger(AuthTest.class);
 
 
-    private static String url = "https://www.bitcharm.com/api/v1";
+    private static String url = "https://www.btcex.com/api/v1";
 
     private static String method = "/public/auth";
 
     private static String clientId = "28e91afa";
 
 
-    private static String clientSecret = "8bf440448c1dac3978282eb8";
+    private static String clientSecret = "***************";
 
     @Test
     public void authTestByClientSignature() {
