@@ -1,159 +1,150 @@
 package com.btcex.sdk.ws;
 
+
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
-import org.apache.commons.lang3.StringUtils;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.nio.channels.UnsupportedAddressTypeException;
 
 public class WebSocketClient implements Closeable {
 
-
     private static final Logger log = LoggerFactory.getLogger(WebSocketClient.class);
 
-    private final int connectionTimeout;
 
-    private WsContext wsContext;
-
-    private final URI uri;
-
-
-    private final int port;
-
+    private final String url;
+    private  String host;
+    private int port;
 
     private Bootstrap bootstrap;
 
-   private ClientHandler handler;
+    private NioEventLoopGroup worker;
 
     private Channel channel;
 
 
-    public WebSocketClient(int connectionTimeout, String url, int port) throws URISyntaxException {
-        this.connectionTimeout = connectionTimeout;
-        this.uri = new URI(url);
-        this.port = port;
-        this.wsContext = new WsContext(new CountDownLatch(1));
+    private  MessageHandler messageHandler =  new MessageHandler();
+
+
+    public Channel getChannel(){
+
+        return channel;
     }
 
 
-    /**
-     * Create a connection
-     *
-     * @throws ClientException
-     */
-    public  void CreateConnect() throws ClientException{
-
-
-
-
+    public WebSocketClient(String url) {
+        this.url = url;
     }
 
 
-    private static final NioEventLoopGroup group = new NioEventLoopGroup();
 
 
-    /**
-     * init connection
-     */
-    public   void init(){
+    public  void creat() throws SSLException, InterruptedException {
+        URI uri = URI.create(this.url);
+        String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+        this.setPort(uri);
+        this.setHost(uri);
+        final SslContext sslCtx =  sslContext(scheme);
 
-        // haker
-        WebSocketClientHandshaker webSocketClientHandshaker = WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
-        // handler
-        handler = new ClientHandler(webSocketClientHandshaker, this.wsContext);
-        //start
         bootstrap = new Bootstrap();
-        //
-        bootstrap.group(group).channel(NioSocketChannel.class).handler(new WsChannelInitializer(handler));
+        WebSocketClientHandshaker handshaker = WebSocketClientHandshakerFactory.
+                newHandshaker(uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
+        this.worker = new NioEventLoopGroup(1);
+        bootstrap.group(worker).channel(NioSocketChannel.class)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+
+                        ChannelPipeline channelPipeline = socketChannel.pipeline();
+                        if (null != sslCtx) {
+                            channelPipeline.addLast(sslCtx.newHandler(socketChannel.alloc(), host, port));
+                        }
+                        channelPipeline
+                                .addLast(new HttpClientCodec(), new HttpObjectAggregator(8192))
+                                .addLast(new ClientHandler(WebSocketClient.this,handshaker))
+                        ;
+
+                    }
+                });
+
+
+        ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
+
+
+
+        channel = channelFuture.channel();
 
     }
 
 
-    public void connect() throws ClientException {
-        try {
-            init();
-            CreateConnect();
-        } catch (Exception e) {
-            throw new ClientException ("Failed Connection :{}" + e.getMessage());
+    private SslContext sslContext(String scheme) throws SSLException {
+        final SslContext sslCtx;
+        if (!"ws".equalsIgnoreCase(scheme) && !"wss".equalsIgnoreCase(scheme)) {
+            throw new UnsupportedAddressTypeException();
         }
+        final boolean ssl = "wss".equalsIgnoreCase(scheme);
+
+        if (ssl) {
+            sslCtx = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+        } else {
+            sslCtx = null;
+        }
+        return sslCtx;
+    }
+
+    private void setHost(URI uri ) {
+
+        this.host = uri.getHost() == null ? "127.0.0.1" : uri.getHost();
     }
 
 
+    private void setPort(URI uri ) {
 
-
-
-    /**
-     * send message
-     * @param message
-     * @throws ClientException
-     */
-    public void send(String message) throws ClientException {
-        Channel channel = getChannel();
-        if (channel != null) {
-            channel.writeAndFlush(new TextWebSocketFrame(message));
-            return;
+        String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+        this.host = uri.getHost() == null ? "127.0.0.1" : uri.getHost();
+        if (uri.getPort() == -1) {
+            if ("http".equalsIgnoreCase(scheme) || "ws".equalsIgnoreCase(scheme)) {
+                this.port = 80;
+            } else if ("wss".equalsIgnoreCase(scheme)) {
+                this.port = 443;
+            } else {
+                this.port = -1;
+            }
+        } else {
+            this.port = uri.getPort();
         }
-        throw new ClientException ("Connection is closed");
-    }
-
-
-
-    public String receiveResult() throws ClientException {
-        this.receive(this.wsContext.getCountDownLatch());
-        if (StringUtils.isEmpty(this.wsContext.getResult())) {
-            throw new ClientException("The message is empty");
-        }
-        return this.wsContext.getResult();
-    }
-
-
-
-    /**
-     * Receive message
-     * @param countDownLatch
-     * @throws ClientException
-     */
-    private void receive(CountDownLatch countDownLatch) throws ClientException {
-        boolean waitFlag = false;
-        try {
-            waitFlag = countDownLatch.await(connectionTimeout, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            log.info("No response message was received for this connection");
-            Thread.currentThread().interrupt();
-        }
-        if (!waitFlag) {
-            log.error("Timeout({}}s) when receiving response message", connectionTimeout);
-            throw new ClientException("timeout");
-        }
-
-
-    }
-
-
-
-    protected  Channel getChannel(){
-
-        return null;
     }
 
 
     @Override
     public void close() throws IOException {
 
+    }
+
+    public MessageHandler getMessageHandler() {
+        return messageHandler;
     }
 }
