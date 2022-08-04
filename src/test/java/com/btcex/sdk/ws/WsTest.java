@@ -25,7 +25,7 @@ public class WsTest {
     public static final Logger log = LoggerFactory.getLogger(WsTest.class);
 
 
-    public static final  AtomicInteger atomicInteger = new AtomicInteger();
+    public static final AtomicInteger atomicInteger = new AtomicInteger();
 
     @Test
     public void simplenessTest() throws SSLException, InterruptedException {
@@ -41,18 +41,16 @@ public class WsTest {
 
         messageHandler.setChannel(channel);
 
-        boolean open =false;
+        boolean open = false;
 
         do {
-             open = channel.isOpen();
+            open = channel.isOpen();
             Thread.sleep(1000);
             //Just call it once
             log.info("auth");
+            if (open) this.clientSignatureAuth(channel);
 
-            this.clientSignatureAuth(channel);
-
-
-        }while (!open);
+        } while (!open);
 
 
         while (true) {
@@ -87,12 +85,10 @@ public class WsTest {
         String signHex = StringToHex.stringToHexString(sign);
 
 
-
-
         JsonRpcRequestParam jsonRpcRequestParam = new JsonRpcRequestParam();
 
         //This ID is the same as response's
-        jsonRpcRequestParam.setId(atomicInteger.incrementAndGet()+"");
+        jsonRpcRequestParam.setId(atomicInteger.incrementAndGet() + "");
         jsonRpcRequestParam.setMethod(method);
 
 
@@ -115,8 +111,7 @@ public class WsTest {
     }
 
 
-
-    public void refreshTokenAuth(Channel channel){
+    public void refreshTokenAuth(Channel channel) {
 
 
         String grantType = "refresh_token";
@@ -135,21 +130,12 @@ public class WsTest {
         data.put("refresh_token", "*******");
 
 
-
         jsonRpcRequestParam.setParams(data);
 
         String jsonString = JSONObject.toJSON(jsonRpcRequestParam).toString();
 
         channel.writeAndFlush(new TextWebSocketFrame(jsonString));
     }
-
-
-
-
-
-
-
-
 
 
 }
