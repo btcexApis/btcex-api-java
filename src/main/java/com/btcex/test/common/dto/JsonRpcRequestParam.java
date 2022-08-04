@@ -1,4 +1,4 @@
-package com.btcex.sdk.common.dto;
+package com.btcex.test.common.dto;
 
 
 import java.io.Serializable;

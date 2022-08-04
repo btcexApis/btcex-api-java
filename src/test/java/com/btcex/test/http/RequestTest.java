@@ -1,8 +1,8 @@
-package com.btcex.sdk.http;
+package com.btcex.test.http;
 
 import com.alibaba.fastjson.JSONObject;
-import com.btcex.sdk.common.dto.JsonRpcRequestParam;
-import com.btcex.sdk.common.util.HttpHelper;
+import com.btcex.test.common.dto.JsonRpcRequestParam;
+import com.btcex.test.common.util.HttpHelper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

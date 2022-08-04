@@ -1,9 +1,9 @@
-package com.btcex.sdk.ws;
+package com.btcex.test.ws;
 
 import com.alibaba.fastjson.JSONObject;
-import com.btcex.sdk.common.dto.JsonRpcRequestParam;
-import com.btcex.sdk.common.util.SHAUtils;
-import com.btcex.sdk.common.util.StringToHex;
+import com.btcex.test.common.dto.JsonRpcRequestParam;
+import com.btcex.test.common.util.SHAUtils;
+import com.btcex.test.common.util.StringToHex;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.junit.Test;
@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

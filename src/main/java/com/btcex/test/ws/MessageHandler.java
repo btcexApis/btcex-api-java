@@ -1,4 +1,4 @@
-package com.btcex.sdk.ws;
+package com.btcex.test.ws;
 
 import io.netty.channel.Channel;
 import org.slf4j.Logger;

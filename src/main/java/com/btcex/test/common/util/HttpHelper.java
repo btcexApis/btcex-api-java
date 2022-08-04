@@ -1,4 +1,4 @@
-package com.btcex.sdk.common.util;
+package com.btcex.test.common.util;
 
 
 import org.apache.http.HttpResponse;
