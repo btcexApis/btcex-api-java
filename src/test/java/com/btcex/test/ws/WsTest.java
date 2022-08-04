@@ -31,7 +31,7 @@ public class WsTest {
 
         WebSocketClient webSocketClient = new WebSocketClient("wss://api.btcex.com/ws/api/v1");
 
-        webSocketClient.creat();
+        webSocketClient.create();
 
         Channel channel = webSocketClient.getChannel();
 

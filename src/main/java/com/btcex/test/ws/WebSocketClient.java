@@ -57,7 +57,7 @@ public class WebSocketClient implements Closeable {
 
 
 
-    public  void creat() throws SSLException, InterruptedException {
+    public  void create() throws SSLException, InterruptedException {
         URI uri = URI.create(this.url);
         String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
         this.setPort(uri);
